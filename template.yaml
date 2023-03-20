@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: WebsiteCounter template starter
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+Resources:
+  WebsiteDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: websitevisitor
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  WebsiteCounter2Function:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: website-counter/
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref WebsiteDynamoDBTable
+      Events:
+        WebsiteCounterApi:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: get
+      Policies:
+        - AmazonDynamoDBFullAccess
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  WebsiteCounterApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  WebsiteCounter2Function:
+    Description: "Website Counter Lambda Function ARN"
+    Value: !GetAtt WebsiteCounter2Function.Arn
+  WebsiteCounter2FunctionIamRole:
+    Description: "Implicit IAM Role created for Website Counter function"
+    Value: !GetAtt WebsiteCounter2FunctionRole.Arn
+  
